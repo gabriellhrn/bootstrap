@@ -1,0 +1,125 @@
+---
+# TODO refactor this file: move vars out of here, separate steps into multiple files
+- name: Install basic apt packages
+  become: true
+  apt:
+    state: present
+    name:
+      - curl 
+      - dconf-cli 
+      - dialog
+      - fish
+      - git
+      - gnome-tweak-tool
+      - htop
+      - neovim
+      - openvpn
+      - python3-pip
+      - python3-setuptools
+      - stow
+      - tmux
+      - uuid-runtime
+      - vim
+
+- name: Install basic snap packages
+  become: true
+  command: snap install {{ item }}
+  with_items:
+    - spotify
+
+- name: Install pip3 packages
+  pip:
+    name: "{{ item }}"
+    executable: pip3
+    extra_args: --user
+  with_items:
+    - powerline-status
+    - protonvpn-cli
+
+# - name: Setup ProtonVPN
+
+# Configure user
+- name: Copy dotfiles
+  git:
+    repo: 'https://github.com/gabriellhrn/dotfiles.git'
+    dest: /home/gabriell/dotfiles
+    clone: yes
+    update: no
+
+- name: Configure tools
+  command: stow {{ item }}
+  args:
+    chdir: /home/gabriell/dotfiles
+  with_items:
+    - git
+    - tmux
+    - vim
+
+- name: Configure nvim
+  copy:
+    dest: /home/gabriell/.config/nvim/init.vim
+    content: |
+      set runtimepath^=~/.vim runtimepath+=~/.vim/after
+      let &packpath=&runtimepath
+      source ~/.vimrc
+
+- name: Install Vundle
+  git:
+    repo: 'https://github.com/VundleVim/Vundle.vim.git'
+    dest: /home/gabriell/.vim/bundle/Vundle.vim
+    update: yes
+    clone: yes
+
+- name: Install Tmux Plugin Manager
+  git:
+    repo: 'https://github.com/tmux-plugins/tpm'
+    dest: /home/gabriell/.tmux/plugins/tpm
+    update: yes
+    clone: yes
+
+- name: Configure shell
+  become: yes
+  user:
+    name: gabriell
+    shell: /usr/bin/fish
+
+- name: Install vim plugins
+  command: vim +PluginInstall +qall
+
+- name: Change position of buttons on window
+  command: gsettings set org.gnome.desktop.wm.preferences button-layout 'close,maximize,minimize:'
+
+- name: Check if Go is installed
+  command: grep {{ version }} /usr/local/go/VERSION
+  register: go_installed
+  vars:
+    version: 1.13.5
+
+- name: Install Go
+  become: yes
+  unarchive:
+    src: https://dl.google.com/go/go{{ version }}.{{ os }}-{{ arch }}.tar.gz
+    dest: /usr/local
+    remote_src: yes
+    owner: gabriell
+    group: gabriell
+  vars:
+    version: 1.13.5
+    os: linux
+    arch: amd64
+  when: go_installed is failed
+
+- name: Check if Go binary is in PATH
+  command: echo $PATH | grep '/usr/local/go/bin'
+  register: go_in_path
+
+- name: Add Go binary to PATH
+  command: set fish_user_paths $fish_user_paths /usr/local/go/bin
+  when: go_in_path is failed
+
+- name: Install gogh
+  become: yes
+  get_url:
+    url: https://raw.githubusercontent.com/Mayccoll/Gogh/master/gogh.sh
+    dest: /usr/local/bin/gogh
+    mode: 0755
