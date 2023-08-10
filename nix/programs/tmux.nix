@@ -13,7 +13,6 @@
 
     plugins = with pkgs.tmuxPlugins; [
         battery
-        continuum
         resurrect
         sensible
 
@@ -54,6 +53,15 @@
 
             set -g @catppuccin_status_modules "application session battery kube date_time host"
             set -g @catppuccin_date_time_text "%Y-%m-%d %H:%M"
+          '';
+        }
+
+        {
+          plugin = continuum;
+          extraConfig = ''
+            set -g @continuum-restore 'on'
+            set -g @continuum-boot 'on'
+            set -g @continuum-save-interval '10'
           '';
         }
     ];
