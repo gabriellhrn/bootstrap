@@ -17,12 +17,13 @@
     curl
     firefox
     htop
+    kubectl
     vim
 
     (nerdfonts.override { fonts = [ "Ubuntu" "UbuntuMono" ]; })
   ];
 
   home.sessionVariables = {
-    EDITOR = "vim";
+    EDITOR = "nvim";
   };
 }

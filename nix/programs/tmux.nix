@@ -1,7 +1,21 @@
 { pkgs, ... }:
 
+let
+  catppuccin-tmux = pkgs.tmuxPlugins.mkTmuxPlugin {
+    pluginName = "catppuccin";
+    version = "unstable-2023-08-11d";
+    src = pkgs.fetchFromGitHub {
+      owner = "gabriellhrn";
+      repo = "catppuccin-tmux";
+      rev = "custom-kube";
+      sha256 = "kD673eojHUOrPgGZBcZYgfsLLDMqbc62heLHviU7Wnw=";
+    };
+  };
+
+in
 {
   home.packages = [
+    pkgs.gnused
     pkgs.tmux
   ];
 
@@ -12,25 +26,10 @@
     historyLimit = 10000;
 
     plugins = with pkgs.tmuxPlugins; [
-        battery
-        resurrect
         sensible
 
         {
-          plugin = mkTmuxPlugin {
-            pluginName = "kube-tmux";
-            version = "2023-08-10";
-            src = pkgs.fetchFromGitHub {
-              owner = "jonmosco";
-              repo = "kube-tmux";
-              rev = "c127fc2181722c93a389534549a217aef12db288";
-              sha256 = "2EMSV6z9FZHq20dkPna0qELSVIOIAnOHpiCLbG7adQQ=";
-            };
-          };
-        }
-
-        {
-          plugin = catppuccin;
+          plugin = catppuccin-tmux;
           extraConfig = ''
             set -g @catppuccin_flavour 'frappe' # latte, frappe, macchiato, mocha
 
@@ -43,6 +42,8 @@
 
             set -g @catppuccin_window_current_fill "number"
             set -g @catppuccin_window_default_fill "number"
+            set -g @catppuccin_window_current_text "#{b:pane_current_path}"
+            set -g @catppuccin_window_default_text "#{b:pane_current_path}"
 
             set -g @catppuccin_status_left_separator " "
             set -g @catppuccin_status_right_separator "█"
@@ -54,6 +55,14 @@
             set -g @catppuccin_status_modules "application session battery kube date_time host"
             set -g @catppuccin_date_time_text "%Y-%m-%d %H:%M"
           '';
+        }
+
+        {
+          plugin = battery;
+        }
+
+        {
+          plugin = resurrect;
         }
 
         {
