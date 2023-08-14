@@ -7,8 +7,8 @@ let
     src = pkgs.fetchFromGitHub {
       owner = "gabriellhrn";
       repo = "catppuccin-tmux";
-      rev = "custom-kube";
-      sha256 = "kD673eojHUOrPgGZBcZYgfsLLDMqbc62heLHviU7Wnw=";
+      rev = "main";
+      sha256 = "XHq1RiQ3v6VpeXFqycHVblgSKsbBv5WoXB6jMTvhZSE=";
     };
   };
 
